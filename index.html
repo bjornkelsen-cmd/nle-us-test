@@ -256,40 +256,29 @@
       document.getElementById('preview-bar').classList.add('visible');
       document.body.classList.add('has-preview');
     }
-    function promoteUrl() {
-      if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
-        return location.origin + '/godkend';
-      }
-      return 'http://127.0.0.1:8766/godkend';
+    function sammeArbejde(a, b) {
+      return JSON.stringify(JSON.parse(a).arbejde) === JSON.stringify(JSON.parse(b).arbejde);
     }
     async function approvePreview() {
       const status = document.getElementById('preview-status');
       const knap = document.getElementById('godkend-knap');
       knap.disabled = true;
-      status.textContent = 'Opdaterer live…';
-      let preview = '';
+      status.textContent = 'Tjekker…';
       try {
-        preview = await (await fetch('data-preview.json?t=' + Date.now(), { cache: 'no-store' })).text();
-        const res = await fetch(promoteUrl(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Promote': 'nle' },
-          body: '{}'
-        });
-        if (!res.ok) throw new Error('promote');
+        const preview = await (await fetch('data-preview.json?t=' + Date.now(), { cache: 'no-store' })).text();
+        const live = await (await fetch('data.json?t=' + Date.now(), { cache: 'no-store' })).text();
+        if (sammeArbejde(preview, live)) {
+          status.textContent = 'Allerede live';
+          location.href = location.pathname;
+          return;
+        }
       } catch (e) {
         knap.disabled = false;
-        status.textContent = 'Live blev ikke opdateret. Prøv igen.';
+        status.textContent = 'Kunne ikke læse siden. Prøv igen.';
         return;
       }
-      const start = Date.now();
-      while (Date.now() - start < 45000) {
-        try {
-          const live = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
-          if ((await live.text()).trim() === preview.trim()) break;
-        } catch (e) {}
-        await new Promise(function (r) { setTimeout(r, 2000); });
-      }
-      location.href = location.pathname;
+      knap.disabled = false;
+      status.textContent = 'Ikke live endnu. Åbn Godkend-linket i mailen.';
     }
     function rejectPreview() {
       if (confirm('Afvis preview og kassér ændringerne?')) {

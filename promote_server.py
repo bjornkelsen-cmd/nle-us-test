@@ -112,4 +112,4 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
+    raise SystemExit("Stoppet. Godkend kører i Gmail via apps-script/Kode.gs, ikke på localhost.")
