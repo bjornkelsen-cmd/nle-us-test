@@ -1,0 +1,24 @@
+{
+  "arbejde": [
+    {
+      "nr": "01",
+      "titel": "Viden",
+      "tekst": "Fagligt grundlag, der kan deles — ikke bare slides, men noget der holder i rummet."
+    },
+    {
+      "nr": "02",
+      "titel": "Læring",
+      "tekst": "Træning, der sidder. Kursusformater bygget til at flytte praksis, ikke kun programmet."
+    },
+    {
+      "nr": "03",
+      "titel": "Praksis",
+      "tekst": "Consulting tæt på opgaven. Fra idé til det, der skal ske ude hos jer."
+    },
+    {
+      "nr": "04",
+      "titel": "Kontaktflade",
+      "tekst": "Én person, ét nummer, én mail. Direkte linje — ingen portal, ingen ticket-kø."
+    }
+  ]
+}
