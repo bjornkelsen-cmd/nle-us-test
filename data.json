@@ -19,6 +19,11 @@
       "nr": "04",
       "titel": "Kontaktflade",
       "tekst": "Én person, ét nummer, én mail. Direkte linje — ingen portal, ingen ticket-kø."
+    },
+    {
+      "nr": "05",
+      "titel": "Ny blok",
+      "tekst": "Dette er teksten til den nye blok under Arbejde."
     }
   ]
 }
