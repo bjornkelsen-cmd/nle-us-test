@@ -256,29 +256,17 @@
       document.getElementById('preview-bar').classList.add('visible');
       document.body.classList.add('has-preview');
     }
-    function sammeArbejde(a, b) {
-      return JSON.stringify(JSON.parse(a).arbejde) === JSON.stringify(JSON.parse(b).arbejde);
-    }
-    async function approvePreview() {
+    function approvePreview() {
       const status = document.getElementById('preview-status');
       const knap = document.getElementById('godkend-knap');
-      knap.disabled = true;
-      status.textContent = 'Tjekker…';
-      try {
-        const preview = await (await fetch('data-preview.json?t=' + Date.now(), { cache: 'no-store' })).text();
-        const live = await (await fetch('data.json?t=' + Date.now(), { cache: 'no-store' })).text();
-        if (sammeArbejde(preview, live)) {
-          status.textContent = 'Allerede live';
-          location.href = location.pathname;
-          return;
-        }
-      } catch (e) {
-        knap.disabled = false;
-        status.textContent = 'Kunne ikke læse siden. Prøv igen.';
+      const token = new URLSearchParams(location.search).get('k');
+      if (!token) {
+        status.textContent = 'Åbn preview-linket fra mailen, og tryk Godkend dér.';
         return;
       }
-      knap.disabled = false;
-      status.textContent = 'Ikke live endnu. Åbn Godkend-linket i mailen.';
+      knap.disabled = true;
+      status.textContent = 'Lægger på live…';
+      location.href = 'https://script.google.com/macros/s/AKfycbxdD_hDgYAkp2WNJ6RYRQ1S9Nk0izekMvS6pq_B_mMAICJu4HZvbjKt9QwwgE3Q3xiV-w/exec?action=godkend&token=' + encodeURIComponent(token);
     }
     function rejectPreview() {
       if (confirm('Afvis preview og kassér ændringerne?')) {

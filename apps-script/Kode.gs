@@ -12,10 +12,19 @@ var REPO = 'bjornkelsen-cmd/nle-us-test';
 var BRANCH = 'main';
 var SITE = 'https://bjornkelsen-cmd.github.io/nle-us-test/';
 var PREVIEW_URL = SITE + '?preview=1';
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxdD_hDgYAkp2WNJ6RYRQ1S9Nk0izekMvS6pq_B_mMAICJu4HZvbjKt9QwwgE3Q3xiV-w/exec';
 var FROM = 'bk@nle.dk';
+var GMAIL_FROM = 'bjornkelsen@gmail.com';
 var SUBJECT = 'NLE ARBEJDE';
 var LABEL_SENT = 'nle-preview-sendt';
 var LABEL_FEJL = 'nle-mail-fejl';
+
+function saveGithubToken(token) {
+  var value = String(token || '').trim();
+  if (!value) throw new Error('Tom GitHub-nøgle.');
+  PropertiesService.getScriptProperties().setProperty('GITHUB_TOKEN', value);
+  return 'ok';
+}
 
 function install() {
   var props = PropertiesService.getScriptProperties();
@@ -44,7 +53,7 @@ function checkMail() {
   if (!lock.tryLock(1000)) return;
   try {
     var threads = GmailApp.search(
-      'from:' + FROM + ' subject:"' + SUBJECT + '" newer_than:2d',
+      '(from:' + FROM + ' OR from:' + GMAIL_FROM + ') subject:"' + SUBJECT + '" newer_than:2d',
       0,
       10
     );
@@ -57,44 +66,106 @@ function checkMail() {
 }
 
 function handleThread(thread) {
-  var labels = thread.getLabels();
-  for (var i = 0; i < labels.length; i++) {
-    var name = labels[i].getName();
-    if (name === LABEL_SENT || name === LABEL_FEJL) return;
-  }
   var messages = thread.getMessages();
   if (!messages.length) return;
-  var first = messages[0];
-  if (String(first.getFrom()).indexOf(FROM) === -1) return;
-  if (String(first.getSubject()).trim() !== SUBJECT) return;
-  var blob = threadBody(messages);
-  if (blob.indexOf(PREVIEW_URL) !== -1) {
-    thread.addLabel(userLabel(LABEL_SENT));
+  var entries = [];
+  for (var i = 0; i < messages.length; i++) {
+    var fromUser = isCommandSender(messages[i].getFrom());
+    var isMail = fromUser && normalizeSubject(messages[i].getSubject()) === SUBJECT && !isOwnNotice(messages[i].getPlainBody());
+    entries.push({ fromUser: fromUser, isMail: isMail, body: messages[i].getPlainBody() });
+  }
+  for (var n = 0; n < messages.length; n++) {
+    if (!entries[n].isMail) continue;
+    var id = messages[n].getId();
+    if (isHandled(id)) continue;
+    if (answerBeforeNextCommand(entries, n)) {
+      markHandled(id);
+      continue;
+    }
+    handleMessage(thread, messages[n]);
+    if (isHandled(messages[n].getId())) markLaterSameDeletes(messages, entries, n);
     return;
   }
-  var parsed = parseAdd(first.getPlainBody());
+}
+
+function markLaterSameDeletes(messages, entries, index) {
+  var parsed = parseMail(entries[index].body);
+  if (!parsed || parsed.action !== 'delete') return;
+  for (var j = index + 1; j < messages.length; j++) {
+    if (!entries[j].isMail || isHandled(messages[j].getId())) continue;
+    var later = parseMail(entries[j].body);
+    if (later && later.action === 'delete' && later.nr === parsed.nr) {
+      markHandled(messages[j].getId());
+    }
+  }
+}
+
+function handleMessage(thread, message) {
+  var parsed = parseMail(message.getPlainBody());
   if (!parsed) {
-    first.reply(
-      'Mailen skal se sådan ud:\n\nADD\n06\nTitel\nTeksten til blokken.'
+    message.reply(
+      'Mailen skal se sådan ud:\n\nADD\n06\nTitel\nTeksten til blokken.\n\neller\n\nDEL 05'
     );
     thread.addLabel(userLabel(LABEL_FEJL));
+    markHandled(message.getId());
+    return;
+  }
+  if (parsed.action === 'delete') {
+    handleDelete(thread, message, parsed.nr);
     return;
   }
   var pushed = upsertPreview(parsed);
   if (!pushed.ok) {
-    first.reply('Preview blev ikke opdateret.\n' + pushed.error);
+    message.reply('Preview blev ikke opdateret.\n' + pushed.error);
     thread.addLabel(userLabel(LABEL_FEJL));
+    markHandled(message.getId());
     return;
   }
   if (!waitForPages(parsed.nr, parsed.titel)) return;
-  var link = godkendLink();
+  var link = previewLink();
   if (!link) return;
-  first.reply(
-    'Preview er klar:\n' + PREVIEW_URL + '\n\n' +
+  message.reply(
+    'Preview er klar:\n' + link + '\n\n' +
     parsed.nr + ' ' + parsed.titel + '\n' + parsed.tekst + '\n\n' +
-    'Godkend lægger det på live:\n' + link
+    'Tryk Godkend på siden. Det lægger det på live.'
   );
   thread.addLabel(userLabel(LABEL_SENT));
+  markHandled(message.getId());
+}
+
+function handleDelete(thread, message, nr) {
+  var removed = removePreview(nr);
+  if (!removed.ok) {
+    message.reply('Preview blev ikke opdateret.\n' + removed.error);
+    thread.addLabel(userLabel(LABEL_FEJL));
+    markHandled(message.getId());
+    return;
+  }
+  if (removed.already) {
+    var live = githubGet('data.json');
+    if (!live.ok) {
+      message.reply('Preview blev ikke opdateret.\n' + live.error);
+      thread.addLabel(userLabel(LABEL_FEJL));
+      markHandled(message.getId());
+      return;
+    }
+    if (!jsonHasNr(live.text, nr)) {
+      message.reply('Blok ' + nr + ' findes ikke.');
+      thread.addLabel(userLabel(LABEL_FEJL));
+      markHandled(message.getId());
+      return;
+    }
+  }
+  if (!waitUntilGone(nr)) return;
+  var link = previewLink();
+  if (!link) return;
+  message.reply(
+    'Preview er klar:\n' + link + '\n\n' +
+    'Blok ' + nr + ' er fjernet fra preview.\n\n' +
+    'Tryk Godkend på siden. Det fjerner den på live.'
+  );
+  thread.addLabel(userLabel(LABEL_SENT));
+  markHandled(message.getId());
 }
 
 function doGet(e) {
@@ -113,11 +184,33 @@ function doGet(e) {
     if (!result.ok) {
       return HtmlService.createHtmlOutput('Live blev ikke opdateret. ' + escapeHtml(result.error));
     }
-    var note = result.already ? 'Allerede live.' : 'Live er opdateret. Genindlæs om et minut, hvis den nye blok mangler.';
+    var note = result.already ? 'Allerede live.' : 'Live er opdateret. Genindlæs om et minut, hvis siden ikke har skiftet.';
     return redirectPage(SITE, note);
   } finally {
     lock.releaseLock();
   }
+}
+
+function parseMail(body) {
+  var lines = String(body || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  var i = 0;
+  while (i < lines.length && !lines[i].trim()) i++;
+  if (i >= lines.length) return null;
+  var firstLine = lines[i].trim();
+  var sameLine = firstLine.match(/^(?:DEL|DELETE)\s+(\d{2})$/i);
+  if (sameLine) return { action: 'delete', nr: sameLine[1] };
+  if (firstLine.toUpperCase() === 'DEL' || firstLine.toUpperCase() === 'DELETE') {
+    i++;
+    while (i < lines.length && !lines[i].trim()) i++;
+    if (i < lines.length && /^\d{2}$/.test(lines[i].trim())) {
+      return { action: 'delete', nr: lines[i].trim() };
+    }
+    return null;
+  }
+  var block = parseAdd(body);
+  if (!block) return null;
+  block.action = 'add';
+  return block;
 }
 
 function parseAdd(body) {
@@ -142,6 +235,46 @@ function parseAdd(body) {
   var tekst = tekstLines.join('\n').trim();
   if (!tekst) return null;
   return { nr: nr, titel: titel, tekst: tekst };
+}
+
+function removePreview(nr) {
+  var file = githubGet('data-preview.json');
+  if (!file.ok) return file;
+  var data = JSON.parse(file.text);
+  var removed = removeBlock(data, nr);
+  if (!removed.found) return { ok: true, already: true };
+  data.arbejde = removed.arbejde;
+  var next = JSON.stringify(data, null, 2) + '\n';
+  var put = githubPut('data-preview.json', next, file.sha, 'Remove block ' + nr + ' from preview');
+  if (!put.ok) return put;
+  return { ok: true, already: false };
+}
+
+function removeBlock(data, nr) {
+  var blocks = (data && data.arbejde) || [];
+  var next = [];
+  var found = false;
+  for (var i = 0; i < blocks.length; i++) {
+    if (blocks[i].nr === nr) {
+      found = true;
+      continue;
+    }
+    next.push(blocks[i]);
+  }
+  return { found: found, arbejde: next };
+}
+
+function jsonHasNr(text, nr) {
+  try {
+    var data = JSON.parse(text);
+  } catch (err) {
+    return false;
+  }
+  var blocks = data.arbejde || [];
+  for (var i = 0; i < blocks.length; i++) {
+    if (blocks[i].nr === nr) return true;
+  }
+  return false;
 }
 
 function upsertPreview(block) {
@@ -181,6 +314,28 @@ function waitForPages(nr, titel) {
     Utilities.sleep(10000);
   }
   return pagesHas(nr, titel);
+}
+
+function waitUntilGone(nr) {
+  for (var i = 0; i < 12; i++) {
+    if (pagesLacks(nr)) return true;
+    Utilities.sleep(10000);
+  }
+  return pagesLacks(nr);
+}
+
+function pagesLacks(nr) {
+  var res = UrlFetchApp.fetch(SITE + 'data-preview.json?t=' + new Date().getTime(), {
+    muteHttpExceptions: true,
+    followRedirects: true
+  });
+  if (res.getResponseCode() !== 200) return false;
+  try {
+    var data = JSON.parse(res.getContentText());
+  } catch (err) {
+    return false;
+  }
+  return !jsonHasNr(JSON.stringify(data), nr);
 }
 
 function pagesHas(nr, titel) {
@@ -251,10 +406,75 @@ function githubHeaders() {
 }
 
 function godkendLink() {
-  var base = ScriptApp.getService().getUrl();
   var token = PropertiesService.getScriptProperties().getProperty('GODKEND_TOKEN');
-  if (!base || !token) return '';
-  return base + '?action=godkend&token=' + encodeURIComponent(token);
+  if (!WEBAPP_URL || !token) return '';
+  return WEBAPP_URL + '?action=godkend&token=' + encodeURIComponent(token);
+}
+
+function previewLink() {
+  var token = PropertiesService.getScriptProperties().getProperty('GODKEND_TOKEN');
+  if (!token) return '';
+  return PREVIEW_URL + '&k=' + encodeURIComponent(token);
+}
+
+function isCommandSender(from) {
+  var text = String(from || '').toLowerCase();
+  return text.indexOf(FROM) !== -1 || text.indexOf(GMAIL_FROM) !== -1;
+}
+
+function isOwnNotice(body) {
+  var text = String(body || '');
+  if (text.indexOf('Preview er klar') !== -1) return true;
+  if (text.indexOf('Mailen skal se sådan ud') !== -1) return true;
+  if (text.indexOf('Preview blev ikke opdateret') !== -1) return true;
+  if (text.indexOf('findes ikke.') !== -1) return true;
+  return text.indexOf(PREVIEW_URL) !== -1 && text.indexOf('Godkend') !== -1;
+}
+
+function normalizeSubject(subject) {
+  var text = String(subject || '').trim();
+  var next = text.replace(/^(?:re|fwd|fw)\s*:\s*/i, '');
+  while (next !== text) {
+    text = next.trim();
+    next = text.replace(/^(?:re|fwd|fw)\s*:\s*/i, '');
+  }
+  return text;
+}
+
+function answerBeforeNextCommand(entries, index) {
+  var nextUser = entries.length;
+  for (var j = index + 1; j < entries.length; j++) {
+    if (entries[j].fromUser && entries[j].isMail) {
+      nextUser = j;
+      break;
+    }
+  }
+  for (var k = index + 1; k < nextUser; k++) {
+    var body = String(entries[k].body || '');
+    if (body.indexOf(PREVIEW_URL) !== -1) return true;
+    if (body.indexOf('Mailen skal se sådan ud') !== -1) return true;
+    if (body.indexOf('findes ikke.') !== -1) return true;
+    if (body.indexOf('Preview blev ikke opdateret') !== -1) return true;
+  }
+  return false;
+}
+
+function handledIds() {
+  var raw = PropertiesService.getScriptProperties().getProperty('HANDLED_IDS') || '';
+  if (!raw) return [];
+  return raw.split(',');
+}
+
+function isHandled(id) {
+  return handledIds().indexOf(id) !== -1;
+}
+
+function markHandled(id) {
+  if (!id || isHandled(id)) return;
+  var ids = handledIds();
+  ids.push(id);
+  if (ids.length > 200) ids = ids.slice(ids.length - 200);
+  PropertiesService.getScriptProperties().setProperty('HANDLED_IDS', ids.join(','));
 }
 
 function userLabel(name) {
