@@ -1,0 +1,21 @@
+Du tjekker kun nye mails om NLE-preview. Din sidste linje skal være præcis en af: QUIET, SENT <message_id>, eller FAILED <kort grund>.
+
+1. Søg i Gmail: from:bk@nle.dk subject:"NLE ARBEJDE" newer_than:2d
+2. Tag kun en mail hvis emnet er præcis "NLE ARBEJDE", afsenderen er bk@nle.dk, og tråden ikke allerede indeholder https://bjornkelsen-cmd.github.io/nle-us-test/?preview=1
+3. Er der ingen sådan mail, så slut med QUIET. Send ingen mail.
+4. Læs mailen. Første linje skal være ADD. Næste linje er nummeret, for eksempel 06. Næste linje er titlen. Resten er teksten.
+5. Skriv kun denne JSON til /tmp/nle-mail-job.json med nøglerne nr, titel og tekst.
+6. Kør: python3 /home/bk/Work/nle-us-test/preview_from_mail.py /tmp/nle-mail-job.json
+7. Svarer scriptet ikke READY, så slut med FAILED og send ingen mail.
+8. Svarer det READY, så svar på den oprindelige mail til bk@nle.dk med præcis denne brødtekst, hvor nr, titel og tekst kommer fra mailen:
+
+Her er previewet:
+https://bjornkelsen-cmd.github.io/nle-us-test/?preview=1
+
+<nr> <titel>
+<tekst>
+
+Kig på linket. Godkend på siden lægger det på live. Afvis lader live være.
+
+9. Slut med SENT og message_id på den mail du svarede på.
+Rør ikke data.json. Åbn ikke en browser. Svar ikke på andre mails.
