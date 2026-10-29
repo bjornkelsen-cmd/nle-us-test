@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NLE — Next Level Education</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #1a1b26;
+      --bg-2: #16161e;
+      --bg-3: #24283b;
+      --fg: #c0caf5;
+      --fg-dim: #a9b1d6;
+      --muted: #565f89;
+      --brand: #9ece6a;
+      --brand-2: #73daca;
+      --blue: #7aa2f7;
+      --magenta: #bb9af7;
+      --orange: #ff9e64;
+      --red: #f7768e;
+      --line: #3b4261;
+      --px: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+    h1, h2, h3 {
+      font-family: Geist, "Geist Fallback", system-ui, sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .lattice {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(122,162,247,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(122,162,247,0.04) 1px, transparent 1px);
+      background-size: 16px 16px;
+      mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+    .mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--fg);
+      text-decoration: none;
+    }
+    .pixel {
+      width: 28px;
+      height: 28px;
+      image-rendering: pixelated;
+      background:
+        linear-gradient(var(--brand), var(--brand)) 0 0 / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 10px 0 / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 20px 0 / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 0 10px / 8px 8px no-repeat,
+        linear-gradient(var(--brand-2), var(--brand-2)) 20px 10px / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 0 20px / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 10px 20px / 8px 8px no-repeat,
+        linear-gradient(var(--brand), var(--brand)) 20px 20px / 8px 8px no-repeat;
+    }
+    .mark b { color: var(--brand); font-weight: 600; }
+    .mark small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+    nav { display: flex; gap: 18px; flex-wrap: wrap; }
+    nav a {
+      color: var(--fg-dim);
+      text-decoration: none;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    nav a:hover { color: var(--brand); }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--brand);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      max-width: 16ch;
+      margin-bottom: 18px;
+    }
+    h1 span { color: var(--brand); }
+    .lede {
+      max-width: 62ch;
+      color: var(--fg-dim);
+      font-size: 16px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--brand);
+      background: color-mix(in srgb, var(--brand) 14%, transparent);
+      color: var(--brand);
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 0;
+      font-size: 13px;
+    }
+    .btn:hover { background: color-mix(in srgb, var(--brand) 24%, transparent); }
+    .btn.ghost {
+      border-color: var(--line);
+      background: transparent;
+      color: var(--fg-dim);
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      margin-top: 40px;
+    }
+    .meta div {
+      background: var(--bg-2);
+      padding: 16px 18px;
+    }
+    .meta dt {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .meta dd { color: var(--fg); margin-top: 4px; }
+
+    section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+    h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 16px; }
+    .sub { color: var(--muted); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      margin-top: 28px;
+    }
+    .card {
+      background: var(--bg-2);
+      padding: 22px;
+    }
+    .card h3 { font-size: 20px; margin-bottom: 8px; }
+    .card p { color: var(--fg-dim); }
+    .tag {
+      color: var(--blue);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .prose { max-width: 68ch; color: var(--fg-dim); }
+    .prose p + p { margin-top: 14px; }
+
+    .contact {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .term {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      padding: 20px;
+    }
+    .term .prompt { color: var(--brand); }
+    .term .key { color: var(--magenta); }
+    .term .val { color: var(--fg); }
+    .term a { color: var(--blue); text-decoration: none; }
+    .term a:hover { text-decoration: underline; }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      margin-top: 28px;
+    }
+    .product {
+      background: var(--bg-2);
+      padding: 20px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 132px;
+    }
+    .product:hover { background: var(--bg-3); }
+    .logo {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      color: var(--brand);
+    }
+    .logo svg, .logo img { width: 28px; height: 28px; display: block; }
+    .product strong {
+      font-family: Geist, system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .product span {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    @media (max-width: 720px) {
+      .products { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    footer {
+      padding: 28px 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 720px) {
+      .meta, .grid, .contact { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lattice" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <a class="mark" href="#top">
+        <span class="pixel" aria-hidden="true"></span>
+        <span>
+          <b>NLE</b>
+          <small>nle.dk</small>
+        </span>
+      </a>
+      <nav>
+        <a href="#om">Om</a>
+        <a href="#arbejde">Arbejde</a>
+        <a href="#produkter">Produkter</a>
+        <a href="#kontakt">Kontakt</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="kicker">nle.dk // next level education</p>
+        <h1>Viden.<br />Læring.<br /><span>Praksis.</span></h1>
+        <p class="lede">
+          Next Level Education er kursus- og konsulentvirksomhed.
+          Consulting og træning — viden, der kan bruges, når arbejdet skal ske.
+        </p>
+        <div class="row">
+          <a class="btn" href="#kontakt">→ Kontakt</a>
+          <a class="btn ghost" href="mailto:bk@nle.dk">bk@nle.dk</a>
+        </div>
+        <dl class="meta">
+          <div>
+            <dt>Domæne</dt>
+            <dd>nle.dk</dd>
+          </div>
+          <div>
+            <dt>Felt</dt>
+            <dd>Kursus &amp; konsulent</dd>
+          </div>
+          <div>
+            <dt>Sted</dt>
+            <dd>Hårlev, DK</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section id="om">
+        <p class="sub">01 / om</p>
+        <h2>Next Level Education</h2>
+        <div class="prose">
+          <p>
+            Aktiviteten er kursus- og konsulentvirksomhed. Kontakten går
+            via Bjørn Kelsen — tidligere Next Level Education, del af
+            Kelsen Invest ApS.
+          </p>
+        </div>
+      </section>
+
+      <section id="arbejde">
+        <p class="sub">02 / arbejde</p>
+        <h2>Consulting og træning</h2>
+        <div class="grid" id="arbejde-grid">
+          <!-- Cards rendered from data.json -->
+        </div>
+      </section>
+
+      <section id="produkter">
+        <p class="sub">03 / produkter</p>
+        <h2>Erfaring i stacken</h2>
+        <p class="prose">Platforme og værktøjer, der er brugt i praksis — endpoint, desktop, OS og AI.</p>
+        <div class="products">
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="4" fill="#00a4e4"/>
+                <circle cx="10" cy="16" r="3.4" stroke="#fff" stroke-width="2.2"/>
+                <circle cx="22" cy="22" r="3.4" stroke="#fff" stroke-width="2.2"/>
+                <circle cx="22" cy="10" r="3.4" stroke="#fff" stroke-width="2.2"/>
+                <path d="M12.8 14.2L19.2 11.2M12.8 17.8L19.2 20.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <strong>ZENworks</strong>
+            <span>OpenText</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M10.5 22.5h12.2c2.6 0 4.8-2 4.8-4.6 0-2.3-1.7-4.2-3.9-4.6-.4-3.2-3.1-5.6-6.4-5.6-2.5 0-4.7 1.4-5.8 3.4-2.5.3-4.4 2.4-4.4 5 0 2.8 2.2 5 5.1 5.4" fill="#7aa2f7"/>
+                <path d="M6.2 23.2h9.8c2.1 0 3.8-1.6 3.8-3.6 0-1.8-1.3-3.3-3.1-3.6-.3-2.5-2.4-4.4-5-4.4-2 0-3.7 1.1-4.6 2.7-2 .2-3.5 1.9-3.5 3.9 0 2.2 1.8 4 4.1 4.3" fill="#c0caf5"/>
+              </svg>
+            </div>
+            <strong>Horizon</strong>
+            <span>Omnissa</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <img src="https://cdn.simpleicons.org/linux/7aa2f7" alt="" width="28" height="28" />
+            </div>
+            <strong>Linux</strong>
+            <span>Tux / kernel</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="4" y="4" width="8" height="8" fill="#9ece6a"/>
+                <rect x="20" y="4" width="8" height="8" fill="#9ece6a"/>
+                <rect x="4" y="20" width="8" height="8" fill="#9ece6a"/>
+                <rect x="12" y="12" width="8" height="8" fill="#73daca"/>
+                <rect x="20" y="20" width="8" height="8" fill="#9ece6a"/>
+              </svg>
+            </div>
+            <strong>Omarchy</strong>
+            <span>Arch + Hyprland</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="#73daca" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.91 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .51 4.91 6.05 6.05 0 0 0 6.51 2.9 5.98 5.98 0 0 0 10.27 0 6.05 6.05 0 0 0 4-2.9 5.98 5.98 0 0 0-.74-7.1zm-9.02 12.2a4.48 4.48 0 0 1-2.88-.91l.14-.08 4.78-2.76a.79.79 0 0 0 .39-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.06v5.58a4.5 4.5 0 0 1-4.49 4.36zm-9.66-4.15a4.47 4.47 0 0 1-.53-3.01l.14.08 4.78 2.76a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.84 2.79a4.5 4.5 0 0 1-6.14-2.64zm-1.26-10.06a4.48 4.48 0 0 1 2.36-1.97V9.3a.77.77 0 0 0 .39.67l5.83 3.37-2.02 1.17a.08.08 0 0 1-.07 0l-4.83-2.79a4.5 4.5 0 0 1-1.66-6.11zm16.6 3.86a.77.77 0 0 0-.39-.67l-5.83-3.37 2.02-1.17a.08.08 0 0 1 .07 0l4.83 2.79a4.5 4.5 0 0 1-.7 8.01v-5.59zm2.01 3.02l-.14-.08-4.78-2.76a.77.77 0 0 0-.78 0l-5.84 3.37v-2.33a.08.08 0 0 1 .03-.06l4.84-2.79a4.5 4.5 0 0 1 6.67 2.65zM8.31 12.86l-2.02-1.17a.08.08 0 0 1-.04-.06V6.05a4.5 4.5 0 0 1 7.37-3.45l-.14.08-4.78 2.76a.77.77 0 0 0-.39.67zm1.57 1.03l2.61-1.5 2.61 1.5v3.01l-2.61 1.5-2.61-1.5z"/>
+              </svg>
+            </div>
+            <strong>ChatGPT</strong>
+            <span>OpenAI</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3h18v18H3z" fill="#000"/>
+                <path d="M7 7h2v10H7zm4 0h2v7h-2zm4 0h2v4h-2z" fill="#fff"/>
+              </svg>
+            </div>
+            <strong>Grok</strong>
+            <span>xAI</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <img src="https://cdn.simpleicons.org/windows/7aa2f7" alt="" width="28" height="28" />
+            </div>
+            <strong>Windows</strong>
+            <span>Microsoft</span>
+          </article>
+          <article class="product">
+            <div class="logo" aria-hidden="true">
+              <img src="https://cdn.simpleicons.org/apple/c0caf5" alt="" width="28" height="28" />
+            </div>
+            <strong>macOS</strong>
+            <span>Apple</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="kontakt">
+        <p class="sub">04 / kontakt</p>
+        <div class="contact">
+          <div>
+            <h2>Skriv eller ring</h2>
+            <p class="prose" style="margin-top:12px">
+              Bjørn Kelsen<br />
+              Byvænget 4<br />
+              DK-4652 Hårlev
+            </p>
+            <div class="row">
+              <a class="btn" href="tel:+4528111692">+45 28 11 16 92</a>
+              <a class="btn ghost" href="mailto:bk@nle.dk">bk@nle.dk</a>
+            </div>
+          </div>
+          <pre class="term"><span class="prompt">$</span> cat kontakt.txt
+<span class="key">navn</span>     <span class="val">Bjørn Kelsen</span>
+<span class="key">mobil</span>    <span class="val"><a href="tel:+4528111692">+45 28111692</a></span>
+<span class="key">mail</span>     <span class="val"><a href="mailto:bk@nle.dk">bk@nle.dk</a></span>
+<span class="key">adr</span>      <span class="val">Byvænget 4</span>
+<span class="key">post</span>     <span class="val">DK-4652 Hårlev</span>
+<span class="key">web</span>      <span class="val">nle.dk</span></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>NLE · Next Level Education</span>
+      <span>Viden – Læring – Praksis</span>
+    </footer>
+  </div>
+
+  <script id="arbejde-fallback" type="application/json">
+  {
+    "arbejde": [
+      {
+        "nr": "01",
+        "titel": "Viden",
+        "tekst": "Fagligt grundlag, der kan deles — ikke bare slides, men noget der holder i rummet."
+      },
+      {
+        "nr": "02",
+        "titel": "Læring",
+        "tekst": "Træning, der sidder. Kursusformater bygget til at flytte praksis, ikke kun programmet."
+      },
+      {
+        "nr": "03",
+        "titel": "Praksis",
+        "tekst": "Consulting tæt på opgaven. Fra idé til det, der skal ske ude hos jer."
+      },
+      {
+        "nr": "04",
+        "titel": "Kontaktflade",
+        "tekst": "Én person, ét nummer, én mail. Direkte linje — ingen portal, ingen ticket-kø."
+      }
+    ]
+  }
+  </script>
+  <script>
+    async function loadArbejde() {
+      const grid = document.getElementById('arbejde-grid');
+      if (!grid) return;
+
+      let data = null;
+      try {
+        const res = await fetch('data.json');
+        if (res.ok) data = await res.json();
+      } catch (e) {
+        // file:// or network error – fall back to embedded data
+      }
+
+      if (!data) {
+        try {
+          const el = document.getElementById('arbejde-fallback');
+          data = JSON.parse(el.textContent);
+        } catch (e) {
+          console.error('No arbejde data available', e);
+          return;
+        }
+      }
+
+      if (!data.arbejde) return;
+      grid.innerHTML = data.arbejde.map(item => `
+        <article class="card">
+          <p class="tag">${item.nr}</p>
+          <h3>${item.titel}</h3>
+          <p>${item.tekst}</p>
+        </article>
+      `).join('');
+    }
+    loadArbejde();
+  </script>
+</body>
+</html>
