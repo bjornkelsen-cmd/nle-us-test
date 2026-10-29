@@ -134,9 +134,9 @@
 </head>
 <body>
   <div id="preview-bar" class="preview-bar">
-    <span>PREVIEW – ændringer er ikke live endnu</span>
+    <span id="preview-status">PREVIEW – ændringer er ikke live endnu</span>
     <div class="actions">
-      <button class="godkend" onclick="approvePreview()">Godkend</button>
+      <button class="godkend" id="godkend-knap" onclick="approvePreview()">Godkend</button>
       <button class="afvis" onclick="rejectPreview()">Afvis</button>
     </div>
   </div>
@@ -227,14 +227,13 @@
   </script>
   <script>
     const isPreview = new URLSearchParams(location.search).has('preview');
-    const WEBHOOK_URL = null;
     async function loadArbejde() {
       const grid = document.getElementById('arbejde-grid');
       if (!grid) return;
       let data = null;
       const file = isPreview ? 'data-preview.json' : 'data.json';
       try {
-        const res = await fetch(file);
+        const res = await fetch(file + '?t=' + Date.now(), { cache: 'no-store' });
         if (res.ok) data = await res.json();
       } catch (e) {}
       if (!data) {
@@ -257,26 +256,40 @@
       document.getElementById('preview-bar').classList.add('visible');
       document.body.classList.add('has-preview');
     }
-    async function approvePreview() {
-      if (!confirm('Godkend ændringerne og gør dem live?')) return;
-      if (WEBHOOK_URL) {
-        try {
-          const res = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'approve' })
-          });
-          if (res.ok) {
-            alert('Godkendt! Siden opdateres nu.');
-            location.href = location.pathname;
-            return;
-          }
-        } catch (e) {}
+    function promoteUrl() {
+      if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+        return location.origin + '/godkend';
       }
-      const subject = encodeURIComponent('Re: NLE ARBEJDE preview');
-      const body = encodeURIComponent('GODKEND');
-      window.location.href = 'mailto:bjornkelsen@gmail.com?subject=' + subject + '&body=' + body;
-      alert('Åbn mail-klienten og send GODKEND, eller svar på preview-mailen med GODKEND.');
+      return 'http://127.0.0.1:8766/godkend';
+    }
+    async function approvePreview() {
+      const status = document.getElementById('preview-status');
+      const knap = document.getElementById('godkend-knap');
+      knap.disabled = true;
+      status.textContent = 'Opdaterer live…';
+      let preview = '';
+      try {
+        preview = await (await fetch('data-preview.json?t=' + Date.now(), { cache: 'no-store' })).text();
+        const res = await fetch(promoteUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Promote': 'nle' },
+          body: '{}'
+        });
+        if (!res.ok) throw new Error('promote');
+      } catch (e) {
+        knap.disabled = false;
+        status.textContent = 'Live blev ikke opdateret. Prøv igen.';
+        return;
+      }
+      const start = Date.now();
+      while (Date.now() - start < 45000) {
+        try {
+          const live = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
+          if ((await live.text()).trim() === preview.trim()) break;
+        } catch (e) {}
+        await new Promise(function (r) { setTimeout(r, 2000); });
+      }
+      location.href = location.pathname;
     }
     function rejectPreview() {
       if (confirm('Afvis preview og kassér ændringerne?')) {
