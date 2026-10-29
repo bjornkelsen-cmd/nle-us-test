@@ -24,6 +24,11 @@
       "nr": "05",
       "titel": "Ny blok",
       "tekst": "Dette er teksten til den nye blok under Arbejde."
+    },
+    {
+      "nr": "06",
+      "titel": "Ny blok igen igen",
+      "tekst": "Dette er teksten til den nye blok under Arbejde."
     }
   ]
 }
