@@ -1,23 +1,29 @@
-# NLE US Test – Minimal site
+# NLE US Test
 
-Data-drevet version af nle.html klar til GitHub Pages.
+Data-drevet udgave af sektionen 02 / arbejde. Siden ligger på GitHub Pages:
+
+https://bjornkelsen-cmd.github.io/nle-us-test/
 
 ## Filer
-- `index.html` – samme udseende som original, men 02/arbejde renderes fra JSON
-- `data.json` – de 4 blokke under Arbejde
 
-## Sådan opdateres "02 / arbejde"
-Rediger kun `data.json`:
-- Ændre tekst på eksisterende
-- Tilføj nyt objekt (med næste nr)
-- Fjern et objekt
+- `index.html` viser blokkene fra JSON
+- `data.json` er live
+- `data-preview.json` er preview (`?preview=1`)
+- `apps-script/Kode.gs` er Gmail-backend
+- `apps-script/OPSÆTNING.md` beskriver ADD og DEL
 
-Ved push til main deployer GitHub Pages automatisk.
+## Sådan opdateres 02 / arbejde
 
-## Deploy til GitHub Pages
-1. Settings → Pages
-2. Branch: main, folder: / (root)
-3. HTTPS er automatisk
+Send en mail fra `bk@nle.dk` eller fra `bjornkelsen@gmail.com`.
+
+Emne: `NLE ARBEJDE`
+
+Kroppen er `ADD` eller `DEL`, som i `apps-script/OPSÆTNING.md`.
+
+Svaret har ét preview-link. Godkend på den side lægger ændringen på live. Der kører ingen Grok og intet lokalt program.
+
+Push til `main` udgiver siden via GitHub Pages.
 
 ## Backup
-Kopier af filerne ligger i Drive: `ai-projects/selfservice/us-model/`
+
+Kopier af filerne ligger i Drive: `ai-projects/selfservice/us-model/`.
