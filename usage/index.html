@@ -103,6 +103,7 @@
         <col class="set">
         <col class="svc">
         <col class="svc">
+        <col class="svc">
       </colgroup>
       <thead>
         <tr>
@@ -111,6 +112,7 @@
           <th scope="col">Set</th>
           <th scope="col" class="svc"><span class="sr-only">Tailscale</span></th>
           <th scope="col" class="svc"><span class="sr-only">Home Assistant</span></th>
+          <th scope="col" class="svc"><span class="sr-only">Grok Bot</span></th>
         </tr>
       </thead>
       <tbody>
@@ -120,6 +122,7 @@
           <td class="set" id="set-m2">indlæser…</td>
           <td class="svc" id="svc-ts-m2"></td>
           <td class="svc" id="svc-ha-m2"></td>
+          <td class="svc" id="svc-gb-m2"></td>
         </tr>
         <tr id="row-air">
           <td class="os"><span class="os-icon" title="Omarchy" role="img" aria-label="Omarchy"><svg viewBox="0 0 1200 1200" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"></path></svg></span></td>
@@ -127,6 +130,7 @@
           <td class="set" id="set-air">indlæser…</td>
           <td class="svc" id="svc-ts-air"></td>
           <td class="svc" id="svc-ha-air"></td>
+          <td class="svc" id="svc-gb-air"></td>
         </tr>
         <tr id="row-m4">
           <td class="os"><span class="os-icon is-apple" title="macOS" role="img" aria-label="macOS"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"></path></svg></span></td>
@@ -134,6 +138,7 @@
           <td class="set is-pending" id="set-m4">ikke sat op</td>
           <td class="svc" id="svc-ts-m4"></td>
           <td class="svc" id="svc-ha-m4"></td>
+          <td class="svc" id="svc-gb-m4"></td>
         </tr>
       </tbody>
     </table>
@@ -220,8 +225,9 @@
     }
     const HA_ICON_PATH = 'M22.939 10.627 13.061.749a1.505 1.505 0 0 0-2.121 0l-9.879 9.878C.478 11.21 0 12.363 0 13.187v9c0 .826.675 1.5 1.5 1.5h9.227l-4.063-4.062a2.034 2.034 0 0 1-.664.113c-1.13 0-2.05-.92-2.05-2.05s.92-2.05 2.05-2.05 2.05.92 2.05 2.05c0 .233-.041.456-.113.665l3.163 3.163V9.928a2.05 2.05 0 0 1-1.15-1.84c0-1.13.92-2.05 2.05-2.05s2.05.92 2.05 2.05a2.05 2.05 0 0 1-1.15 1.84v8.127l3.146-3.146A2.051 2.051 0 0 1 18 12.239c1.13 0 2.05.92 2.05 2.05s-.92 2.05-2.05 2.05c-.25 0-.488-.047-.709-.13L12.9 20.602v3.088h9.6c.825 0 1.5-.675 1.5-1.5v-9c0-.825-.477-1.977-1.061-2.561z';
     const TS_ICON_PATH = 'M24 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-9 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm0-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6-6a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM3 24a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm18 .5a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM6 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm9-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-3 2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM6 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM3 5.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z';
+    const GB_ICON_PATH = 'M6 2h12a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm3.2 3.8a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8zm0 7.2a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z';
 
-    function svcIcon(path, state, titles) {
+    function svcIcon(path, state, titles, evenodd) {
       const wrap = document.createElement("span");
       const kind = state === "up" ? "up" : state === "down" ? "down" : "pending";
       const title = titles[kind];
@@ -229,7 +235,8 @@
       wrap.title = title;
       wrap.setAttribute("role", "img");
       wrap.setAttribute("aria-label", title);
-      wrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + path + '"></path></svg>';
+      const rule = evenodd ? ' fill-rule="evenodd" clip-rule="evenodd"' : "";
+      wrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + rule + ' d="' + path + '"></path></svg>';
       return wrap;
     }
 
@@ -261,10 +268,20 @@
       el.replaceChildren(icon ? icon : document.createTextNode(""));
     }
 
+    function gbState(data, opts) {
+      if (opts.pending) return "pending";
+      if (data && data.grokbot) {
+        if (data.grokbot.status === "up" || data.grokbot.status === "down") return data.grokbot.status;
+        if (data.grokbot.status === "missing") return "pending";
+      }
+      return opts.gb === false ? null : (data ? "pending" : "pending");
+    }
+
     function fillMachineRow(key, data, opts) {
       const setEl = document.getElementById("set-" + key);
       const tsEl = document.getElementById("svc-ts-" + key);
       const haEl = document.getElementById("svc-ha-" + key);
+      const gbEl = document.getElementById("svc-gb-" + key);
       if (opts.pending || !data || !data.updated) {
         if (opts.pending) {
           if (setEl) { setEl.textContent = "ikke sat op"; setEl.className = "set is-pending"; }
@@ -283,6 +300,12 @@
         down: "Home Assistant nede",
         pending: "Home Assistant ikke sat op"
       }) : null);
+      const gb = gbState(data, opts);
+      fillSlot(gbEl, gb ? svcIcon(GB_ICON_PATH, gb, {
+        up: "Grok Bot online",
+        down: "Grok Bot offline",
+        pending: "Grok Bot offline"
+      }, true) : null);
     }
 
     async function loadHeartbeat(file) {
@@ -295,13 +318,14 @@
       }
     }
     async function refreshMachines() {
-      const [m2, air] = await Promise.all([
+      const [m2, air, m4] = await Promise.all([
         loadHeartbeat("status-omarchy-bk.json"),
-        loadHeartbeat("status-air-omarchy.json")
+        loadHeartbeat("status-air-omarchy.json"),
+        loadHeartbeat("status-m4.json")
       ]);
       fillMachineRow("m2", m2, { ha: true, ts: true, tsMissing: "Tailscale ikke installeret" });
       fillMachineRow("air", air, { ha: false, ts: true, tsMissing: "Tailscale ikke installeret" });
-      fillMachineRow("m4", null, { pending: true, ha: false, ts: true, tsMissing: "Tailscale ikke sat op" });
+      fillMachineRow("m4", m4, { ha: false, ts: true, tsMissing: "Tailscale ikke sat op" });
     }
 
     const STALE_MS = 6 * 60 * 60 * 1000;
