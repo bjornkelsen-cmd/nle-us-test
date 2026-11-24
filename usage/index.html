@@ -289,7 +289,7 @@
           if (setEl) { setEl.textContent = "ikke set"; setEl.className = "set is-stale"; }
         }
       } else if (setEl) {
-        setEl.textContent = "set " + fmtClock(data.updated);
+        setEl.textContent = fmtClock(data.updated);
         setEl.className = "set" + (heartbeatState(data.updated) === "stale" ? " is-stale" : "");
       }
       const ts = tsState(data, opts);
