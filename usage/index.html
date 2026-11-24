@@ -290,7 +290,9 @@
       const bots = Array.isArray(data.by_bot) ? data.by_bot : [];
       const shares = bots.map(b => {
         const pct = Number(b.share_percent) || 0;
-        const name = String(b.name || "").replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]));
+        const displayNames = { "GROK CLI": "GROK CLI BOT" };
+        const rawName = String(b.name || "");
+        const name = (displayNames[rawName] || rawName).replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]));
         return `<div class="share"><span class="name">${name}</span><span class="pct">${fmtPct(pct)}</span><div class="bar"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div></div>`;
       }).join("");
       document.getElementById("body-grokbot").innerHTML =
