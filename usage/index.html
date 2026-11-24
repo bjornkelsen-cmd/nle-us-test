@@ -92,8 +92,8 @@
       <article class="card" id="card-grokcli" data-source="grokcli">
         <div class="card-head">
           <div>
-            <h2>Grok CLI</h2>
-            <div class="plan">kø-jobs</div>
+            <h2>Grok CLI (terminal)</h2>
+            <div class="plan" id="plan-grokcli">ugentlig kvote</div>
           </div>
           <span class="badge" id="badge-grokcli">Indlæser</span>
         </div>
@@ -244,33 +244,60 @@
       ]);
     }
 
+    function fmtUsd(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      return new Intl.NumberFormat("da-DK", { style: "currency", currency: "USD" }).format(Number(n));
+    }
+
+    function queueFrom(data) {
+      if (data.queue && (data.queue.today || data.queue.week)) return data.queue;
+      if (data.today || data.week) return { today: data.today, week: data.week };
+      return null;
+    }
+
     function renderGrokCli(data) {
-      if (data.error || !data.updated) {
+      const hasQuota = data && !data.error && data.weekly_used_percent != null;
+      const q = queueFrom(data || {});
+      const updated = hasQuota ? data.updated : (q && q.updated) || (data && data.updated);
+      if (!hasQuota && !q) {
         setState("grokcli", "missing");
         setBadge("grokcli", "bad", "Ingen data");
         document.getElementById("body-grokcli").innerHTML = '<p class="empty">Ingen fil endnu, eller den kunne ikke læses.</p>';
         document.getElementById("meta-grokcli").innerHTML = "";
         return;
       }
-      const stale = isStale(data.updated);
+      const stale = isStale(updated);
       setState("grokcli", stale ? "stale" : "ok");
       setBadge("grokcli", stale ? "warn" : "", stale ? "Forældet" : "Aktuel");
-      const t = data.today || {};
-      const w = data.week || {};
-      const label = data.label || "Kun tokens fra kø-jobs med target grok — ikke den ugentlige SuperGrok-kvote";
-      document.getElementById("body-grokcli").innerHTML = `
+      if (data.plan) document.getElementById("plan-grokcli").textContent = data.plan;
+      else document.getElementById("plan-grokcli").textContent = hasQuota ? "ugentlig kvote" : "kø-jobs";
+
+      const used = data.weekly_used_percent;
+      const remaining = used == null ? null : Math.max(0, 100 - Number(used));
+      let body = "";
+      if (hasQuota) {
+        body += '<div class="gauges">' + gauge(used, remaining, "Uge") + "</div>";
+      }
+      if (q) {
+        const t = q.today || {};
+        const w = q.week || {};
+        body += `
         <div class="stats">
           <div class="stat">
-            <dt>I dag</dt>
+            <dt>Kø i dag</dt>
             <dd>${fmtInt(t.total_tokens)}<small>${fmtInt(t.jobs)} job · ${fmtInt(t.input_tokens)} ind / ${fmtInt(t.output_tokens)} ud</small></dd>
           </div>
           <div class="stat">
-            <dt>Seneste 7 dage</dt>
+            <dt>Kø, seneste 7 dage</dt>
             <dd>${fmtInt(w.total_tokens)}<small>${fmtInt(w.jobs)} job · ${fmtInt(w.input_tokens)} ind / ${fmtInt(w.output_tokens)} ud</small></dd>
           </div>
-        </div>
-        <p class="note">${label}. Den ugentlige SuperGrok-kvote vises under Grok Bot. Interaktiv brug uden for køen indgår ikke her.</p>`;
-      setMeta("grokcli", data.updated, []);
+        </div>`;
+      }
+      document.getElementById("body-grokcli").innerHTML = body;
+      const extra = [];
+      if (hasQuota && data.credits_usd != null) extra.push(`<div><dt>Credits</dt><dd>${fmtUsd(data.credits_usd)}</dd></div>`);
+      if (hasQuota && data.resets_at) extra.push(`<div><dt>Nulstilles</dt><dd>${fmtDateTime(data.resets_at)}</dd></div>`);
+      setMeta("grokcli", updated, extra);
     }
 
     function renderGrokBot(data) {
