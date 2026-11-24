@@ -62,6 +62,7 @@
     .machine-status{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;margin:0 0 28px;padding:0;font-size:13px;color:var(--fg-dim)}
     .machine-status li.is-stale{color:var(--red)}
     .machine-status li.is-pending{color:var(--muted)}
+    .machine-status li .ha-down{color:var(--red)}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -173,8 +174,17 @@
         el.classList.add("is-stale");
         return;
       }
-      el.textContent = label + " sidst set kl. " + fmtClock(data.updated);
+      const clock = label + " sidst set kl. " + fmtClock(data.updated);
       el.classList.toggle("is-stale", heartbeatState(data.updated) === "stale");
+      if (label === "M2" && data.ha && (data.ha.status === "up" || data.ha.status === "down")) {
+        const haUp = data.ha.status === "up";
+        const ha = document.createElement("span");
+        ha.className = haUp ? "ha-up" : "ha-down";
+        ha.textContent = haUp ? "HA oppe" : "HA nede";
+        el.replaceChildren(document.createTextNode(clock + " · "), ha);
+      } else {
+        el.textContent = clock;
+      }
     }
     async function loadHeartbeat(file) {
       try {
