@@ -187,7 +187,7 @@
         if (!res.ok) { link.classList.add("is-stale"); return; }
         const data = await res.json();
         let state = m2Freshness(data && data.updated);
-        if (state === "fresh" && data && data.ha && data.ha.status === "down") state = "aging";
+        if (state === "fresh" && data && ((data.ha && data.ha.status === "down") || (data.tailscale && data.tailscale.status === "down"))) state = "aging";
         link.classList.remove("is-fresh", "is-aging", "is-stale");
         link.classList.add("is-" + state);
       } catch (e) {
