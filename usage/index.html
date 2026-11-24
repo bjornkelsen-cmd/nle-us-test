@@ -70,8 +70,9 @@
     .machines .name{color:var(--fg);font-weight:500}
     .machines .set.is-stale{color:var(--red)}
     .machines .set.is-pending{color:var(--muted)}
-    .machines .svc-icons{display:inline-flex;align-items:center;gap:0.5em}
-    .machines .svc-icon{display:inline-flex;width:1.15em;height:1.15em;color:var(--brand)}
+    .machines col.svc{width:1.7em}
+    .machines th.svc,.machines td.svc{width:1.7em;min-width:1.7em;padding-right:6px;text-align:center}
+    .machines .svc-icon{display:inline-flex;width:1.15em;height:1.15em;margin:0 auto;color:var(--brand)}
     .machines .svc-icon.is-down{color:var(--red)}
     .machines .svc-icon.is-pending{color:var(--muted)}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
@@ -96,12 +97,20 @@
     <p class="lede">Aktuelt forbrug af ChatGPT Codex/Work, Grok CLI og Grok Bot. Tallene er offentlige procenter, tidspunkter og token-totaler — uden kontonavne eller nøgler. Tider vises i dansk tid (Europa/København).</p>
 
     <table class="machines" id="machine-status" aria-label="Maskinstatus">
+      <colgroup>
+        <col class="os">
+        <col class="name">
+        <col class="set">
+        <col class="svc">
+        <col class="svc">
+      </colgroup>
       <thead>
         <tr>
           <th scope="col"><span class="sr-only">Styresystem</span></th>
           <th scope="col">Maskine</th>
           <th scope="col">Set</th>
-          <th scope="col"><span class="sr-only">Services</span></th>
+          <th scope="col" class="svc"><span class="sr-only">Tailscale</span></th>
+          <th scope="col" class="svc"><span class="sr-only">Home Assistant</span></th>
         </tr>
       </thead>
       <tbody>
@@ -109,19 +118,22 @@
           <td class="os"><span class="os-icon" title="Omarchy" role="img" aria-label="Omarchy"><svg viewBox="0 0 1200 1200" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"></path></svg></span></td>
           <td class="name">M2</td>
           <td class="set" id="set-m2">indlæser…</td>
-          <td class="svc" id="svc-m2"></td>
+          <td class="svc" id="svc-ts-m2"></td>
+          <td class="svc" id="svc-ha-m2"></td>
         </tr>
         <tr id="row-air">
           <td class="os"><span class="os-icon" title="Omarchy" role="img" aria-label="Omarchy"><svg viewBox="0 0 1200 1200" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="m1200 1200h-480v-80h400v-1040h-479.996v160h-400v720h720v-720h-80v-80h159.996v880h-400v160h-640v-1200h1200zm-1120-80h480v-80h-400l.004-400h-80.004zm0-560h80.004v-400h400v-80h-480.004z"></path></svg></span></td>
           <td class="name">Air</td>
           <td class="set" id="set-air">indlæser…</td>
-          <td class="svc" id="svc-air"></td>
+          <td class="svc" id="svc-ts-air"></td>
+          <td class="svc" id="svc-ha-air"></td>
         </tr>
         <tr id="row-m4">
           <td class="os"><span class="os-icon is-apple" title="macOS" role="img" aria-label="macOS"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"></path></svg></span></td>
           <td class="name">M4</td>
           <td class="set is-pending" id="set-m4">ikke sat op</td>
-          <td class="svc" id="svc-m4"></td>
+          <td class="svc" id="svc-ts-m4"></td>
+          <td class="svc" id="svc-ha-m4"></td>
         </tr>
       </tbody>
     </table>
@@ -229,46 +241,48 @@
       };
     }
 
-    function fillServices(el, data, opts) {
+    function tsState(data, opts) {
+      if (opts.pending) return "pending";
+      if (data && data.tailscale) {
+        if (data.tailscale.status === "up" || data.tailscale.status === "down") return data.tailscale.status;
+        if (data.tailscale.status === "missing") return "pending";
+      }
+      return null;
+    }
+
+    function haState(data, opts) {
+      if (!opts.ha) return null;
+      if (data && data.ha && (data.ha.status === "up" || data.ha.status === "down")) return data.ha.status;
+      return opts.pending ? "pending" : null;
+    }
+
+    function fillSlot(el, icon) {
       if (!el) return;
-      const icons = document.createElement("span");
-      icons.className = "svc-icons";
-      if (opts.ha) {
-        const ha = data && data.ha && (data.ha.status === "up" || data.ha.status === "down") ? data.ha.status : (opts.pending ? "pending" : null);
-        if (ha) icons.appendChild(svcIcon(HA_ICON_PATH, ha, {
-          up: "Home Assistant oppe",
-          down: "Home Assistant nede",
-          pending: "Home Assistant ikke sat op"
-        }));
-      }
-      if (opts.ts) {
-        let ts = null;
-        if (opts.pending) ts = "pending";
-        else if (data && data.tailscale) {
-          if (data.tailscale.status === "up" || data.tailscale.status === "down" || data.tailscale.status === "missing") ts = data.tailscale.status === "missing" ? "pending" : data.tailscale.status;
-        }
-        if (ts) icons.appendChild(svcIcon(TS_ICON_PATH, ts, tsTitles(opts.tsMissing || "Tailscale ikke sat op")));
-      }
-      el.replaceChildren(icons);
+      el.replaceChildren(icon ? icon : document.createTextNode(""));
     }
 
     function fillMachineRow(key, data, opts) {
       const setEl = document.getElementById("set-" + key);
-      const svcEl = document.getElementById("svc-" + key);
+      const tsEl = document.getElementById("svc-ts-" + key);
+      const haEl = document.getElementById("svc-ha-" + key);
       if (opts.pending || !data || !data.updated) {
         if (opts.pending) {
           if (setEl) { setEl.textContent = "ikke sat op"; setEl.className = "set is-pending"; }
         } else {
           if (setEl) { setEl.textContent = "ikke set"; setEl.className = "set is-stale"; }
         }
-        fillServices(svcEl, data, opts);
-        return;
-      }
-      if (setEl) {
+      } else if (setEl) {
         setEl.textContent = "set " + fmtClock(data.updated);
         setEl.className = "set" + (heartbeatState(data.updated) === "stale" ? " is-stale" : "");
       }
-      fillServices(svcEl, data, opts);
+      const ts = tsState(data, opts);
+      fillSlot(tsEl, ts ? svcIcon(TS_ICON_PATH, ts, tsTitles(opts.tsMissing || "Tailscale ikke sat op")) : null);
+      const ha = haState(data, opts);
+      fillSlot(haEl, ha ? svcIcon(HA_ICON_PATH, ha, {
+        up: "Home Assistant oppe",
+        down: "Home Assistant nede",
+        pending: "Home Assistant ikke sat op"
+      }) : null);
     }
 
     async function loadHeartbeat(file) {
