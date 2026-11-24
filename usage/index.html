@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Aktuelt forbrug af ChatGPT Codex, Grok CLI og Grok Bot." />
+  <title>Forbrug — NLE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#1a1b26; --bg-2:#16161e; --bg-3:#24283b; --fg:#c0caf5; --fg-dim:#a9b1d6;
+      --muted:#565f89; --brand:#9ece6a; --brand-2:#73daca; --blue:#7aa2f7;
+      --magenta:#bb9af7; --orange:#ff9e64; --red:#f7768e; --line:#3b4261;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--fg);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:15px;line-height:1.65;min-height:100vh}
+    h1,h2,h3{font-family:Geist,"Geist Fallback",system-ui,sans-serif;font-weight:600;letter-spacing:-0.02em;line-height:1.15}
+    .lattice{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(122,162,247,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(122,162,247,0.04) 1px,transparent 1px);background-size:16px 16px;mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 75%)}
+    .wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 72px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+    .mark{display:flex;align-items:center;gap:12px;color:var(--fg);text-decoration:none}
+    .pixel{width:28px;height:28px;image-rendering:pixelated;background:linear-gradient(var(--brand),var(--brand)) 0 0/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 10px 0/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 20px 0/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 0 10px/8px 8px no-repeat,linear-gradient(var(--brand-2),var(--brand-2)) 20px 10px/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 0 20px/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 10px 20px/8px 8px no-repeat,linear-gradient(var(--brand),var(--brand)) 20px 20px/8px 8px no-repeat}
+    .mark b{color:var(--brand);font-weight:600}
+    .mark small{display:block;color:var(--muted);font-size:11px;font-weight:400}
+    .kicker{color:var(--brand);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;margin:40px 0 14px}
+    h1{font-size:clamp(36px,6vw,56px);margin-bottom:12px}
+    .lede{max-width:68ch;color:var(--fg-dim);margin-bottom:36px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:var(--bg-2);border:1px solid var(--line);padding:22px 22px 18px;display:flex;flex-direction:column;gap:16px;min-height:100%;transition:opacity .2s, filter .2s}
+    .card.is-stale,.card.is-missing{opacity:.55;filter:grayscale(.7)}
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .card h2{font-size:22px}
+    .plan{color:var(--blue);font-size:11px;letter-spacing:0.1em;text-transform:uppercase}
+    .badge{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--line);color:var(--muted);padding:3px 8px;white-space:nowrap}
+    .badge.warn{border-color:var(--orange);color:var(--orange)}
+    .badge.bad{border-color:var(--red);color:var(--red)}
+    .gauges{display:flex;gap:12px;justify-content:space-around;flex-wrap:wrap}
+    .gauge{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:132px}
+    .gauge svg{display:block}
+    .gauge .label{color:var(--muted);font-size:11px;letter-spacing:0.08em;text-transform:uppercase}
+    .gauge .nums{text-align:center;font-size:12px;color:var(--fg-dim)}
+    .gauge .nums strong{display:block;color:var(--fg);font-family:Geist,system-ui,sans-serif;font-size:20px;font-weight:600}
+    .meta{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--fg-dim);margin-top:auto}
+    .meta dt{color:var(--muted);font-size:10px;letter-spacing:0.1em;text-transform:uppercase}
+    .shares{display:flex;flex-direction:column;gap:10px}
+    .share{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+    .share .name{font-size:12px;color:var(--fg)}
+    .share .pct{font-size:12px;color:var(--brand-2)}
+    .bar{grid-column:1 / -1;height:6px;background:var(--bg-3);border:1px solid var(--line)}
+    .bar > span{display:block;height:100%;background:var(--blue)}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+    .stat{background:var(--bg-3);padding:12px 14px}
+    .stat dt{color:var(--muted);font-size:10px;letter-spacing:0.1em;text-transform:uppercase}
+    .stat dd{font-family:Geist,system-ui,sans-serif;font-size:22px;font-weight:600;color:var(--fg);margin-top:2px}
+    .stat dd small{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:400;color:var(--fg-dim);margin-top:2px}
+    .note{font-size:12px;color:var(--muted)}
+    .empty{color:var(--muted);font-size:13px;padding:18px 0}
+    footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="lattice" aria-hidden="true"></div>
+  <div class="wrap">
+    <header>
+      <a class="mark" href="https://www.nle.dk/">
+        <span class="pixel" aria-hidden="true"></span>
+        <span><b>NLE</b><small>Next Level Education</small></span>
+      </a>
+    </header>
+
+    <p class="kicker">Dashboard</p>
+    <h1>Forbrug</h1>
+    <p class="lede">Aktuelt forbrug af ChatGPT Codex/Work, Grok CLI og Grok Bot. Tallene er offentlige procenter, tidspunkter og token-totaler — uden kontonavne eller nøgler. Tider vises i dansk tid (Europa/København).</p>
+
+    <div class="grid">
+      <article class="card" id="card-codex" data-source="codex">
+        <div class="card-head">
+          <div>
+            <h2>ChatGPT Codex/Work</h2>
+            <div class="plan">delt kvote</div>
+          </div>
+          <span class="badge" id="badge-codex">Indlæser</span>
+        </div>
+        <div id="body-codex" class="empty">Henter data…</div>
+        <dl class="meta" id="meta-codex"></dl>
+      </article>
+
+      <article class="card" id="card-grokcli" data-source="grokcli">
+        <div class="card-head">
+          <div>
+            <h2>Grok CLI</h2>
+            <div class="plan">kø-jobs</div>
+          </div>
+          <span class="badge" id="badge-grokcli">Indlæser</span>
+        </div>
+        <div id="body-grokcli" class="empty">Henter data…</div>
+        <dl class="meta" id="meta-grokcli"></dl>
+      </article>
+
+      <article class="card" id="card-grokbot" data-source="grokbot">
+        <div class="card-head">
+          <div>
+            <h2>Grok Bot</h2>
+            <div class="plan" id="plan-grokbot">ugentlig kvote</div>
+          </div>
+          <span class="badge" id="badge-grokbot">Indlæser</span>
+        </div>
+        <div id="body-grokbot" class="empty">Henter data…</div>
+        <dl class="meta" id="meta-grokbot"></dl>
+      </article>
+    </div>
+
+    <footer>
+      <span>Sidst forsøgt indlæst: <span id="loaded-at">—</span></span>
+      <span>Siden er ikke linket fra det øvrige site.</span>
+    </footer>
+  </div>
+
+  <script>
+    const STALE_MS = 6 * 60 * 60 * 1000;
+    const TZ = "Europe/Copenhagen";
+    const files = ["codex", "grokcli", "grokbot"];
+
+    function fmtDateTime(iso) {
+      if (!iso) return "ukendt";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "ukendt";
+      return new Intl.DateTimeFormat("da-DK", {
+        timeZone: TZ,
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(d) + " dansk tid";
+    }
+
+    function fmtPct(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      return new Intl.NumberFormat("da-DK", { maximumFractionDigits: 1 }).format(Number(n)) + " %";
+    }
+
+    function fmtInt(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      return new Intl.NumberFormat("da-DK", { maximumFractionDigits: 0 }).format(Number(n));
+    }
+
+    function level(used) {
+      if (used == null) return "ok";
+      if (used >= 90) return "bad";
+      if (used >= 70) return "warn";
+      return "ok";
+    }
+
+    function colorFor(used) {
+      const lv = level(used);
+      if (lv === "bad") return "#f7768e";
+      if (lv === "warn") return "#ff9e64";
+      return "#9ece6a";
+    }
+
+    function isStale(iso) {
+      if (!iso) return true;
+      const t = Date.parse(iso);
+      if (Number.isNaN(t)) return true;
+      return (Date.now() - t) > STALE_MS;
+    }
+
+    function gauge(used, remaining, caption) {
+      const r = 46, c = 2 * Math.PI * r;
+      const u = Math.max(0, Math.min(100, Number(used) || 0));
+      const dash = (u / 100) * c;
+      const col = colorFor(u);
+      return `
+        <div class="gauge">
+          <svg width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="${caption}: ${fmtPct(used)} brugt">
+            <circle cx="60" cy="60" r="${r}" fill="none" stroke="#24283b" stroke-width="10"></circle>
+            <circle cx="60" cy="60" r="${r}" fill="none" stroke="${col}" stroke-width="10"
+              stroke-linecap="butt" stroke-dasharray="${dash} ${c}"
+              transform="rotate(-90 60 60)"></circle>
+            <text x="60" y="58" text-anchor="middle" fill="#c0caf5" font-family="Geist,system-ui,sans-serif" font-size="22" font-weight="600">${fmtPct(used).replace(" %","")}</text>
+            <text x="60" y="74" text-anchor="middle" fill="#565f89" font-size="9" font-family="JetBrains Mono,ui-monospace,monospace">% brugt</text>
+          </svg>
+          <div class="label">${caption}</div>
+          <div class="nums"><strong>${fmtPct(remaining)}</strong>tilbage</div>
+        </div>`;
+    }
+
+    function setMeta(id, updated, extraRows) {
+      const el = document.getElementById("meta-" + id);
+      const rows = [`<div><dt>Sidst opdateret</dt><dd>${fmtDateTime(updated)}</dd></div>`]
+        .concat(extraRows || []);
+      el.innerHTML = rows.join("");
+    }
+
+    function setBadge(id, kind, text) {
+      const el = document.getElementById("badge-" + id);
+      el.className = "badge" + (kind ? " " + kind : "");
+      el.textContent = text;
+    }
+
+    function setState(id, state) {
+      const card = document.getElementById("card-" + id);
+      card.classList.toggle("is-stale", state === "stale");
+      card.classList.toggle("is-missing", state === "missing");
+    }
+
+    async function load(name) {
+      const url = "data/" + name + ".json?t=" + Date.now();
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return { error: "missing" };
+        return await res.json();
+      } catch (err) {
+        return { error: "missing" };
+      }
+    }
+
+    function renderCodex(data) {
+      if (data.error || !data.updated) {
+        setState("codex", "missing");
+        setBadge("codex", "bad", "Ingen data");
+        document.getElementById("body-codex").innerHTML = '<p class="empty">Ingen fil endnu, eller den kunne ikke læses.</p>';
+        document.getElementById("meta-codex").innerHTML = "";
+        return;
+      }
+      const stale = isStale(data.updated);
+      setState("codex", stale ? "stale" : "ok");
+      setBadge("codex", stale ? "warn" : "", stale ? "Forældet" : "Aktuel");
+      const f = data.five_hour || {};
+      const w = data.weekly || {};
+      document.getElementById("body-codex").innerHTML =
+        '<div class="gauges">' +
+          gauge(f.used_percent, f.remaining_percent, "5-timersvindue") +
+          gauge(w.used_percent, w.remaining_percent, "Uge") +
+        "</div>";
+      setMeta("codex", data.updated, [
+        `<div><dt>5 timer nulstilles</dt><dd>${fmtDateTime(f.resets_at)}</dd></div>`,
+        `<div><dt>Uge nulstilles</dt><dd>${fmtDateTime(w.resets_at)}</dd></div>`
+      ]);
+    }
+
+    function renderGrokCli(data) {
+      if (data.error || !data.updated) {
+        setState("grokcli", "missing");
+        setBadge("grokcli", "bad", "Ingen data");
+        document.getElementById("body-grokcli").innerHTML = '<p class="empty">Ingen fil endnu, eller den kunne ikke læses.</p>';
+        document.getElementById("meta-grokcli").innerHTML = "";
+        return;
+      }
+      const stale = isStale(data.updated);
+      setState("grokcli", stale ? "stale" : "ok");
+      setBadge("grokcli", stale ? "warn" : "", stale ? "Forældet" : "Aktuel");
+      const t = data.today || {};
+      const w = data.week || {};
+      const label = data.label || "Kun tokens fra kø-jobs med target grok — ikke den ugentlige SuperGrok-kvote";
+      document.getElementById("body-grokcli").innerHTML = `
+        <div class="stats">
+          <div class="stat">
+            <dt>I dag</dt>
+            <dd>${fmtInt(t.total_tokens)}<small>${fmtInt(t.jobs)} job · ${fmtInt(t.input_tokens)} ind / ${fmtInt(t.output_tokens)} ud</small></dd>
+          </div>
+          <div class="stat">
+            <dt>Seneste 7 dage</dt>
+            <dd>${fmtInt(w.total_tokens)}<small>${fmtInt(w.jobs)} job · ${fmtInt(w.input_tokens)} ind / ${fmtInt(w.output_tokens)} ud</small></dd>
+          </div>
+        </div>
+        <p class="note">${label}. Den ugentlige SuperGrok-kvote vises under Grok Bot. Interaktiv brug uden for køen indgår ikke her.</p>`;
+      setMeta("grokcli", data.updated, []);
+    }
+
+    function renderGrokBot(data) {
+      if (data.error || !data.updated) {
+        setState("grokbot", "missing");
+        setBadge("grokbot", "bad", "Ingen data");
+        document.getElementById("body-grokbot").innerHTML = '<p class="empty">Ingen fil endnu, eller den kunne ikke læses.</p>';
+        document.getElementById("meta-grokbot").innerHTML = "";
+        return;
+      }
+      const stale = isStale(data.updated);
+      setState("grokbot", stale ? "stale" : "ok");
+      setBadge("grokbot", stale ? "warn" : "", stale ? "Forældet" : "Aktuel");
+      if (data.plan) document.getElementById("plan-grokbot").textContent = data.plan;
+      const used = data.weekly_used_percent;
+      const remaining = used == null ? null : Math.max(0, 100 - Number(used));
+      const bots = Array.isArray(data.by_bot) ? data.by_bot : [];
+      const shares = bots.map(b => {
+        const pct = Number(b.share_percent) || 0;
+        const name = String(b.name || "").replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]));
+        return `<div class="share"><span class="name">${name}</span><span class="pct">${fmtPct(pct)}</span><div class="bar"><span style="width:${Math.max(0,Math.min(100,pct))}%"></span></div></div>`;
+      }).join("");
+      document.getElementById("body-grokbot").innerHTML =
+        '<div class="gauges">' + gauge(used, remaining, "Uge") + "</div>" +
+        (shares ? '<div class="shares">' + shares + "</div>" : "");
+      setMeta("grokbot", data.updated, [
+        `<div><dt>Nulstilles</dt><dd>${fmtDateTime(data.resets_at)}</dd></div>`
+      ]);
+    }
+
+    async function refresh() {
+      const [codex, grokcli, grokbot] = await Promise.all(files.map(load));
+      renderCodex(codex);
+      renderGrokCli(grokcli);
+      renderGrokBot(grokbot);
+      document.getElementById("loaded-at").textContent = fmtDateTime(new Date().toISOString());
+    }
+
+    refresh();
+  </script>
+</body>
+</html>

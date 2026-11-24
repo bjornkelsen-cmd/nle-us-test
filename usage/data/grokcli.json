@@ -1,0 +1,17 @@
+{
+  "updated": "2026-11-24T17:24:04+01:00",
+  "source": "ai-queue logs/tokens.csv",
+  "label": "Kun tokens fra kø-jobs med target grok — ikke den ugentlige SuperGrok-kvote",
+  "today": {
+    "jobs": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "week": {
+    "jobs": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  }
+}
