@@ -156,12 +156,14 @@
     function fmtClock(iso) {
       const d = new Date(iso);
       if (Number.isNaN(d.getTime())) return "ukendt";
-      return new Intl.DateTimeFormat("da-DK", {
+      const parts = new Intl.DateTimeFormat("en-GB", {
         timeZone: TZ,
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23"
-      }).format(d);
+      }).formatToParts(d);
+      const get = (type) => parts.find((p) => p.type === type).value;
+      return get("hour") + ":" + get("minute");
     }
     function setMachineLine(id, label, data) {
       const el = document.getElementById(id);
