@@ -1,8 +1,8 @@
 {
   "machine": "air-omarchy",
   "host": "air-omarchy",
-  "updated": "2026-11-24T18:43:47+01:00",
-  "uptime": "up 1 day, 19 hours, 36 minutes",
+  "updated": "2026-11-24T19:00:00+01:00",
+  "uptime": "up 1 day, 19 hours, 52 minutes",
   "last_boot": "2026-11-22T23:07:26+01:00",
   "omarchy": "4.5.0-3",
   "kernel": "7.2.15-arch1-1-t2"
