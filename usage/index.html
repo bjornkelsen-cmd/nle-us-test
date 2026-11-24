@@ -59,6 +59,9 @@
     .note{font-size:12px;color:var(--muted)}
     .empty{color:var(--muted);font-size:13px;padding:18px 0}
     footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .machine-status{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;margin:0 0 28px;padding:0;font-size:13px;color:var(--fg-dim)}
+    .machine-status li.is-stale{color:var(--red)}
+    .machine-status li.is-pending{color:var(--muted)}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -75,6 +78,12 @@
     <p class="kicker">Dashboard</p>
     <h1>Forbrug</h1>
     <p class="lede">Aktuelt forbrug af ChatGPT Codex/Work, Grok CLI og Grok Bot. Tallene er offentlige procenter, tidspunkter og token-totaler — uden kontonavne eller nøgler. Tider vises i dansk tid (Europa/København).</p>
+
+    <ul class="machine-status" id="machine-status" aria-label="Maskinstatus">
+      <li id="status-m2">M2 indlæser…</li>
+      <li id="status-air">Air indlæser…</li>
+      <li id="status-m4" class="is-pending">M4 ikke sat op endnu</li>
+    </ul>
 
     <div class="grid">
       <article class="card" id="card-codex" data-source="codex">
@@ -121,6 +130,68 @@
   </div>
 
   <script>
+
+    function cphParts(d) {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: TZ,
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(d);
+      const get = (type) => Number(parts.find((p) => p.type === type).value);
+      return { year: get("year"), month: get("month"), day: get("day"), hour: get("hour"), minute: get("minute") };
+    }
+    function heartbeatState(updatedIso) {
+      if (!updatedIso) return "stale";
+      const updated = new Date(updatedIso);
+      if (Number.isNaN(updated.getTime())) return "stale";
+      const age = Date.now() - updated.getTime();
+      const u = cphParts(updated);
+      const n = cphParts(new Date());
+      const overnightGrace = u.hour === 0 && n.year === u.year && n.month === u.month && n.day === u.day && (n.hour < 8 || (n.hour === 8 && n.minute < 30));
+      if (age <= 90 * 60 * 1000) return "fresh";
+      if (age <= 6 * 60 * 60 * 1000 || overnightGrace) return "aging";
+      return "stale";
+    }
+    function fmtClock(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "ukendt";
+      return new Intl.DateTimeFormat("da-DK", {
+        timeZone: TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+      }).format(d);
+    }
+    function setMachineLine(id, label, data) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!data || !data.updated) {
+        el.textContent = label + " ikke set";
+        el.classList.add("is-stale");
+        return;
+      }
+      el.textContent = label + " sidst set kl. " + fmtClock(data.updated);
+      el.classList.toggle("is-stale", heartbeatState(data.updated) === "stale");
+    }
+    async function loadHeartbeat(file) {
+      try {
+        const res = await fetch("data/" + file + "?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+    async function refreshMachines() {
+      const [m2, air] = await Promise.all([
+        loadHeartbeat("status-omarchy-bk.json"),
+        loadHeartbeat("status-air-omarchy.json")
+      ]);
+      setMachineLine("status-m2", "M2", m2);
+      setMachineLine("status-air", "Air", air);
+    }
+
     const STALE_MS = 6 * 60 * 60 * 1000;
     const TZ = "Europe/Copenhagen";
     const files = ["codex", "grokcli", "grokbot"];
@@ -339,6 +410,7 @@
     }
 
     refresh();
+    refreshMachines();
   </script>
 </body>
 </html>

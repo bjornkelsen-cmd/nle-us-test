@@ -73,6 +73,9 @@
     .usage-link{display:inline-flex;align-items:center;justify-content:center;margin-left:1.736em;color:inherit;opacity:0.28;text-decoration:none;vertical-align:middle;line-height:0;border-radius:2px}
     .usage-link svg{width:0.66em;height:0.66em;display:block}
     .usage-link:hover,.usage-link:focus-visible{opacity:0.95;outline:none}
+    .usage-link.is-fresh{color:var(--brand)}
+    .usage-link.is-aging{color:var(--orange)}
+    .usage-link.is-stale{color:var(--red)}
   </style>
 </head>
 <body>
@@ -153,7 +156,45 @@
       location.href = 'https://script.google.com/macros/s/AKfycbxdD_hDgYAkp2WNJ6RYRQ1S9Nk0izekMvS6pq_B_mMAICJu4HZvbjKt9QwwgE3Q3xiV-w/exec?action=godkend&token=' + encodeURIComponent(token);
     }
     function rejectPreview() { if (confirm('Afvis preview og kassér ændringerne?')) { alert('Preview afvist. Live-siden er uændret.'); location.href = location.pathname; } }
-    setupPreviewBar(); loadArbejde();
+
+    function cphParts(d) {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Copenhagen",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(d);
+      const get = (type) => Number(parts.find((p) => p.type === type).value);
+      return { year: get("year"), month: get("month"), day: get("day"), hour: get("hour"), minute: get("minute") };
+    }
+    function m2Freshness(updatedIso) {
+      if (!updatedIso) return "stale";
+      const updated = new Date(updatedIso);
+      if (Number.isNaN(updated.getTime())) return "stale";
+      const age = Date.now() - updated.getTime();
+      const u = cphParts(updated);
+      const n = cphParts(new Date());
+      const overnightGrace = u.hour === 0 && n.year === u.year && n.month === u.month && n.day === u.day && (n.hour < 8 || (n.hour === 8 && n.minute < 30));
+      if (age <= 90 * 60 * 1000) return "fresh";
+      if (age <= 6 * 60 * 60 * 1000 || overnightGrace) return "aging";
+      return "stale";
+    }
+    async function colorUsageGauge() {
+      const link = document.querySelector("a.usage-link");
+      if (!link) return;
+      try {
+        const res = await fetch("/usage/data/status-omarchy-bk.json?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) { link.classList.add("is-stale"); return; }
+        const data = await res.json();
+        const state = m2Freshness(data && data.updated);
+        link.classList.remove("is-fresh", "is-aging", "is-stale");
+        link.classList.add("is-" + state);
+      } catch (e) {
+        link.classList.remove("is-fresh", "is-aging");
+        link.classList.add("is-stale");
+      }
+    }
+    setupPreviewBar(); loadArbejde(); colorUsageGauge();
   </script>
 </body>
 </html>
