@@ -1,0 +1,9 @@
+{
+  "machine": "omarchy-bk",
+  "host": "omarchy-bk",
+  "updated": "2026-11-24T18:43:37+01:00",
+  "uptime": "up 1 day, 9 hours, 6 minutes",
+  "last_boot": "2026-11-23T09:37:07+01:00",
+  "omarchy": "4.5.0-3",
+  "kernel": "7.2.12-3-1-ARCH"
+}
