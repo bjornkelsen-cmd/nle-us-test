@@ -1,12 +1,16 @@
 {
-  "updated": "2026-11-25T20:02+01:00",
-  "weekly_used_percent": 39.5,
+  "updated": "2026-11-26T00:05+01:00",
+  "weekly_used_percent": 39.6,
   "resets_at": "2026-12-01T09:21+01:00",
   "plan": "SuperGrok",
   "by_bot": [
     {
       "name": "GROK CLI",
       "share_percent": 100
+    },
+    {
+      "name": "Main Grok Bot",
+      "share_percent": 0
     },
     {
       "name": "Omarchy sync",
