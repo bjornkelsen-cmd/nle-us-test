@@ -211,6 +211,13 @@
       if (age <= 6 * 60 * 60 * 1000 || overnightGrace) return "aging";
       return "stale";
     }
+    const ICON_STALE_MS = 60 * 60 * 1000;
+    function heartbeatUnseen(updatedIso) {
+      if (!updatedIso) return true;
+      const updated = new Date(updatedIso);
+      if (Number.isNaN(updated.getTime())) return true;
+      return (Date.now() - updated.getTime()) > ICON_STALE_MS;
+    }
     function fmtClock(iso) {
       const d = new Date(iso);
       if (Number.isNaN(d.getTime())) return "ukendt";
@@ -292,15 +299,21 @@
         setEl.textContent = fmtClock(data.updated);
         setEl.className = "set" + (heartbeatState(data.updated) === "stale" ? " is-stale" : "");
       }
-      const ts = tsState(data, opts);
+      const unseen = !opts.pending && heartbeatUnseen(data && data.updated);
+      let ts = tsState(data, opts);
+      let ha = haState(data, opts);
+      let gb = gbState(data, opts);
+      if (unseen) {
+        if (ts) ts = "down";
+        if (ha) ha = "down";
+        if (gb) gb = "down";
+      }
       fillSlot(tsEl, ts ? svcIcon(TS_ICON_PATH, ts, tsTitles(opts.tsMissing || "Tailscale ikke sat op")) : null);
-      const ha = haState(data, opts);
       fillSlot(haEl, ha ? svcIcon(HA_ICON_PATH, ha, {
         up: "Home Assistant oppe",
         down: "Home Assistant nede",
         pending: "Home Assistant ikke sat op"
       }) : null);
-      const gb = gbState(data, opts);
       fillSlot(gbEl, gb ? svcIcon(GB_ICON_PATH, gb, {
         up: "Grok Bot online",
         down: "Grok Bot offline",
@@ -547,6 +560,7 @@
 
     refresh();
     refreshMachines();
+    setInterval(refreshMachines, 60 * 1000);
   </script>
 </body>
 </html>
