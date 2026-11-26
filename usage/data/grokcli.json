@@ -1,8 +1,8 @@
 {
-  "updated": "2026-11-26T08:00:41+01:00",
+  "updated": "2026-11-26T12:00:20+01:00",
   "source": "grok /usage",
   "label": "Grok CLI (terminal)",
-  "weekly_used_percent": 72,
+  "weekly_used_percent": 74,
   "resets_at": "2026-11-26T21:51:00+01:00",
   "credits_usd": 12.64,
   "plan": "SuperGrok",
