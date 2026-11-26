@@ -7,7 +7,7 @@
   "credits_usd": 12.64,
   "plan": "SuperGrok",
   "queue": {
-    "updated": "2026-11-26T12:02:59+01:00",
+    "updated": "2026-11-26T16:02:59+01:00",
     "source": "ai-queue logs/tokens.csv",
     "label": "Kun tokens fra kø-jobs med target grok",
     "today": {
