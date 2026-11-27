@@ -1,24 +1,24 @@
 {
   "machine": "omarchy-bk",
   "host": "omarchy-bk",
-  "updated": "2026-11-27T12:00:05+01:00",
-  "uptime": "up 2 hours, 21 minutes",
+  "updated": "2026-11-27T13:00:05+01:00",
+  "uptime": "up 3 hours, 21 minutes",
   "last_boot": "2026-11-27T09:38:17+01:00",
   "omarchy": "4.6.0rc1-2",
   "kernel": "7.2.12-3-1-ARCH",
   "ha": {
     "status": "up",
-    "checked": "2026-11-27T12:00:05+01:00",
+    "checked": "2026-11-27T13:00:05+01:00",
     "detail": "http 200 /manifest.json; process running"
   },
   "tailscale": {
     "status": "up",
-    "checked": "2026-11-27T12:00:05+01:00",
+    "checked": "2026-11-27T13:00:05+01:00",
     "detail": "BackendState Running; Self.Online true"
   },
   "grokbot": {
     "status": "up",
-    "checked": "2026-11-27T12:00:05+01:00",
+    "checked": "2026-11-27T13:00:05+01:00",
     "detail": "process grok-bot"
   }
 }
