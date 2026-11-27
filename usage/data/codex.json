@@ -1,9 +1,9 @@
 {
-  "updated": "2026-11-27T12:04:03+01:00",
+  "updated": "2026-11-27T16:02:03+01:00",
   "five_hour": {
-    "used_percent": 6,
-    "remaining_percent": 94,
-    "resets_at": "2026-11-27T13:43:00+01:00"
+    "used_percent": 0,
+    "remaining_percent": 100,
+    "resets_at": "2026-11-27T21:01:38+01:00"
   },
   "weekly": {
     "used_percent": 2,
