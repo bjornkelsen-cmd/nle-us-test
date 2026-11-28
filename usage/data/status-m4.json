@@ -1,20 +1,20 @@
 {
   "machine": "m4",
   "host": "MacBook-Pro",
-  "updated": "2026-11-28T09:04:28+01:00",
-  "uptime": "9:04 up 73 days, 22:02, 2 users, load averages: 19.04 11.08 7.70",
+  "updated": "2026-11-28T10:01:24+01:00",
+  "uptime": "10:01 up 73 days, 22:59, 2 users, load averages: 16.43 11.86 8.20",
   "last_boot": "2026-09-15T12:02:52+02:00",
   "macos": "27.0",
   "model": "Mac16,7",
   "kernel": "27.0.0",
   "tailscale": {
     "status": "up",
-    "checked": "2026-11-28T09:04:28+01:00",
+    "checked": "2026-11-28T10:01:24+01:00",
     "detail": "BackendState Running; Self.Online true"
   },
   "grokbot": {
     "status": "up",
-    "checked": "2026-11-28T09:04:28+01:00",
+    "checked": "2026-11-28T10:01:24+01:00",
     "detail": "process Grok Bot"
   }
 }
